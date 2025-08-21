@@ -3,6 +3,7 @@
 #include <string>
 #include <limits>
 #include <windows.h>
+#include <fstream> // Header für Datei-Streams (Lesen/Schreiben)
 
 // Stellt eine Verbindung zum seriellen Port her, sendet Daten und empfängt eine Antwort.
 // Der 'command'-Parameter ist der String, der an den Arduino gesendet wird.
@@ -55,11 +56,11 @@ std::string communicateWithArduino(const std::string& command) {
 
     // Konfiguriert die Timeout-Einstellungen für Lese- und Schreibvorgänge.
     COMMTIMEOUTS timeouts = { 0 };
-    timeouts.ReadIntervalTimeout = 50; // Maximale Zeit in ms zwischen dem Eintreffen zweier Zeichen.
-    timeouts.ReadTotalTimeoutConstant = 50; // Eine konstante Zeit in ms, die pro Leseoperation gewartet wird.
-    timeouts.ReadTotalTimeoutMultiplier = 10; // Eine zusätzliche Wartezeit in ms pro zu lesendem Byte.
-    timeouts.WriteTotalTimeoutConstant = 50; // Konstante Wartezeit für Schreibvorgänge.
-    timeouts.WriteTotalTimeoutMultiplier = 10; // Zusätzliche Wartezeit pro zu schreibendem Byte.
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    timeouts.WriteTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 10;
 
     // Wendet die neuen Timeout-Einstellungen auf die serielle Verbindung an.
     if (!SetCommTimeouts(hSerial, &timeouts)) {
@@ -150,7 +151,7 @@ void displayMenu() {
 
 // Fordert den Benutzer auf, die Operanden einzugeben und bereitet die Daten für den Versand vor.
 // Lagert die Auswahl der verschieden Operationen in eine eigene Funktion aus, um den main-code lesbarer zu machen.
-void handleOperation(char op) {
+void handleOperation(char op, std::ofstream& logFile) { // Nimmt eine Referenz zum logFile entgegen.
     float operand1, operand2; // Variablen für die beiden Gleitkommazahlen, die der Benutzer eingibt.
     std::string operand1_name, operand2_name; // Variablen für die text Bezeichnungen z.B. 'Summand'.
 
@@ -172,8 +173,11 @@ void handleOperation(char op) {
 
     // Kommunikation zum Arduino
     std::cout << "\nSende '" << expression << "' an den Arduino..." << std::endl;
+    logFile << "Gesendet: " << expression << std::endl; // Schreibt den gesendeten String in die Log-Datei.
+
     // Die Funktion aufrufen und die Antwort vom Arduino in einer Variable speichern.
     std::string resultFromServer = communicateWithArduino(expression);
+    logFile << "Empfangen: " << resultFromServer << std::endl; // Schreibt die empfangene Antwort in die Log-Datei.
 
     // Das finale Ergebnis (oder eine Fehlermeldung) anzeigen.
     std::cout << "\n--- Ergebnis ---\n";
@@ -184,6 +188,7 @@ void handleOperation(char op) {
     else {
         // Falls die Kommunikation fehlschlägt (leerer String), eine Fehlermeldung ausgeben.
         std::cout << "Fehler: Keine Antwort vom Arduino erhalten." << std::endl;
+        logFile << "Fehler: Keine Antwort vom Arduino erhalten." << std::endl; // Loggt auch den Kommunikationsfehler.
     }
     std::cout << "----------------\n";
 }
@@ -191,6 +196,16 @@ void handleOperation(char op) {
 // Die main-Funktion ist der Haupteinstiegspunkt des Programms. Die Ausführung beginnt hier.
 int main()
 {
+    // Erstellt und öffnet eine Datei namens "communication_log.txt" zum Schreiben.
+    // std::ios::app sorgt dafür, dass neue Einträge am Ende der Datei angehängt werden (append).
+    std::ofstream logFile("communication_log.txt", std::ios::app);
+
+    // Prüft, ob die Log-Datei erfolgreich geöffnet werden konnte.
+    if (!logFile.is_open()) {
+        std::cerr << "FEHLER: Log-Datei konnte nicht geoeffnet werden!" << std::endl;
+        return 1; // Beendet das Programm mit einem Fehlercode.
+    }
+
     std::cout << "======================================\n";
     std::cout << "   Mikrocontroller-Kalkulator-Projekt   \n";
     std::cout << "======================================\n";
@@ -219,12 +234,13 @@ int main()
         // Die switch-Anweisung überprueft den Wert der Variable 'choice'.
         switch (choice)
         {
-        case 1: handleOperation('+'); break;
-        case 2: handleOperation('-'); break;
-        case 3: handleOperation('*'); break;
-        case 4: handleOperation('/'); break;
+        case 1: handleOperation('+', logFile); break;
+        case 2: handleOperation('-', logFile); break;
+        case 3: handleOperation('*', logFile); break;
+        case 4: handleOperation('/', logFile); break;
         case 5:
             std::cout << "Programm wird beendet.\n";
+            logFile.close(); // Schließt die Log-Datei, bevor das Programm beendet wird.
             return 0;
         default:
             std::cout << "FEHLER: Ungueltige Auswahl. Bitte versuchen Sie es erneut.\n";

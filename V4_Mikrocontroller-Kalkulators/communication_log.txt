@@ -1,0 +1,16 @@
+Gesendet: 34.000000 / 4.000000
+Empfangen: 8.50
+Gesendet: 3.000000 + 4.000000
+Empfangen: 7.00
+Gesendet: 134.000000 / 341.000000
+Empfangen: 0.39
+Gesendet: 100.000000 / 3.000000
+Empfangen: 33.33
+Gesendet: 1.000000 + 1.000000
+Empfangen: 2.00
+Gesendet: 1.000000 + 1.000000
+Empfangen: 2.00
+Gesendet: 111.000000 / 0.000000
+Empfangen: Fehler: Division durch Null!
+Gesendet: 1231.000000 - 5435.000000
+Empfangen: -4204.00
