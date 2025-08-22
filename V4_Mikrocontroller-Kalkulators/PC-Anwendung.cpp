@@ -3,7 +3,7 @@
 #include <string>
 #include <limits>
 #include <windows.h>
-#include <fstream> // Header für Datei-Streams (Lesen/Schreiben)
+#include <fstream>
 
 // Stellt eine Verbindung zum seriellen Port her, sendet Daten und empfängt eine Antwort.
 // Der 'command'-Parameter ist der String, der an den Arduino gesendet wird.
